@@ -7,37 +7,35 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProviders
 
 private const val TAG = "MainActivity"
+private const val KEY_INDEX = "index"
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
     private lateinit var nextButton: Button
     private lateinit var questionTextView:TextView
-    private val questionBank = listOf(
-        Question(R.string.question_australia, true),
-        Question(R.string.question_oceans,
-            true),
-        Question(R.string.question_mideast,
-            false),
-        Question(R.string.question_africa,
-            false),
-        Question(R.string.question_americas
-            , true),
-        Question(R.string.question_asia,
-            true))
-    private var currentIndex = 0
     private var answered = false
     private var countOfCorrect = 0
     private val TAG = "MainActivity"
     private val QUESTION_INDEX = "question_index"
 
+    private val quizViewModel: QuizViewModel by
+    lazy {
+        ViewModelProviders.of(this).get(QuizViewModel::class.java)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         Log.d(TAG, "onCreate(Bundle?) called")
         setContentView(R.layout.activity_main)
+        val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        quizViewModel.currentIndex = currentIndex
+        val lastQuestion = quizViewModel.lastQuestion
         trueButton = findViewById(R.id.true_button)
         falseButton =findViewById(R.id.false_button)
         nextButton = findViewById(R.id.next_button)
@@ -50,9 +48,9 @@ class MainActivity : AppCompatActivity() {
                 trueButton.isEnabled = false
                 falseButton.isEnabled = false
             }
-            if (currentIndex == questionBank.size - 1){
+            if (quizViewModel.currentIndex == lastQuestion){
                 nextButton.isEnabled = false
-                result(countOfCorrect)
+                result(countOfCorrect,lastQuestion+1)
             }
 
         }
@@ -64,23 +62,23 @@ class MainActivity : AppCompatActivity() {
                 trueButton.isEnabled = false
                 falseButton.isEnabled = false
             }
-            if (currentIndex == questionBank.size - 1){
+            if (quizViewModel.currentIndex == lastQuestion){
                 nextButton.isEnabled = false
-                result(countOfCorrect)
+                result(countOfCorrect,lastQuestion+1)
             }
         }
         nextButton.setOnClickListener {
-            if (currentIndex == questionBank.size - 1){
+            if (quizViewModel.currentIndex == lastQuestion){
                 nextButton.isEnabled = false
             }
             else{
                 answered = false
                 trueButton.isEnabled = true
                 falseButton.isEnabled = true
-                currentIndex = (currentIndex + 1) % questionBank.size
+                quizViewModel.moveToNext()
             }
-
             updateQuestion()
+
         }
 
         updateQuestion()
@@ -97,6 +95,12 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         Log.d(TAG, "onPause() called")
     }
+    override fun onSaveInstanceState(savedInstanceState: Bundle)
+    {
+        super.onSaveInstanceState(savedInstanceState)
+        Log.i(TAG, "onSaveInstanceState")
+        savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
+    }
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop() called")
@@ -105,24 +109,15 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
     }
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(QUESTION_INDEX, currentIndex)
-        super.onSaveInstanceState(outState)
-    }
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        currentIndex = savedInstanceState.getInt(QUESTION_INDEX)
-        updateQuestion()
-    }
     private fun updateQuestion() {
-        val questionTextResId = questionBank[currentIndex].textResId
+        val questionTextResId = quizViewModel.currentQuestionText
         questionTextView.setText(questionTextResId)
 
         trueButton.visibility = View.VISIBLE
         falseButton.visibility = View.VISIBLE
     }
     private fun checkAnswer(userAnswer: Boolean) {
-        val correctAnswer = questionBank[currentIndex].answer
+        val correctAnswer =  quizViewModel.currentQuestionAnswer
         val messageResId = if (userAnswer ==
             correctAnswer) {
             R.string.correct_toast
@@ -134,8 +129,8 @@ class MainActivity : AppCompatActivity() {
         }
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
     }
-    private fun result(countOfCorrect: Int){
-        val res = "Count of correct answers: $countOfCorrect"
+    private fun result(countOfCorrect: Int, lastQuestion: Int){
+        val res = "Count of correct answers: $countOfCorrect/$lastQuestion"
         Toast.makeText(this, res, Toast.LENGTH_SHORT).show()
     }
 }
