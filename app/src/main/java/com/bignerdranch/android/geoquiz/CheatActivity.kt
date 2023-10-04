@@ -30,6 +30,7 @@ class CheatActivity : AppCompatActivity() {
             }
             answerTextView.setText(answerText)
             setAnswerShownResult(true)
+            incrementCheatCount()
         }
         val apiLevel = Build.VERSION.SDK_INT
         val apiLevelText = getString(R.string.android_version, apiLevel)
@@ -51,5 +52,14 @@ class CheatActivity : AppCompatActivity() {
                     answerIsTrue)
             }
         }
+        private var isCheated = 0
+        fun getCheatCount(): Int {
+            return isCheated
+        }
+        fun incrementCheatCount() {
+            isCheated+=1
+        }
+
     }
+
 }

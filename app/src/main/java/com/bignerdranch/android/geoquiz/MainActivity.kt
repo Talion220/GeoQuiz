@@ -52,7 +52,6 @@ class MainActivity : AppCompatActivity() {
             if (!answered) {
                 checkAnswer(true)
                 answered = true
-                // Заблокировать кнопки ответов после ответа
                 trueButton.isEnabled = false
                 falseButton.isEnabled = false
                 cheatButton.isEnabled = false
@@ -67,7 +66,6 @@ class MainActivity : AppCompatActivity() {
             if (!answered) {
                 checkAnswer(false)
                 answered = true
-                // Заблокировать кнопки ответов после ответа
                 trueButton.isEnabled = false
                 falseButton.isEnabled = false
                 cheatButton.isEnabled = false
@@ -85,20 +83,20 @@ class MainActivity : AppCompatActivity() {
                 answered = false
                 trueButton.isEnabled = true
                 falseButton.isEnabled = true
-                cheatButton.isEnabled = true
                 quizViewModel.moveToNext()
             }
             updateQuestion()
 
         }
         cheatButton.setOnClickListener {view->
-            // Начало CheatActivity
+            if (CheatActivity.getCheatCount()>1){
+                cheatButton.isEnabled=false
+            }
             val answerIsTrue =
                 quizViewModel.currentQuestionAnswer
             val intent =
                 CheatActivity.newIntent(this@MainActivity,
                     answerIsTrue)
-            startActivityForResult(intent, REQUEST_CODE_CHEAT)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val options = ActivityOptions
                 .makeClipRevealAnimation(view, 0, 0, view.width, view.height)
