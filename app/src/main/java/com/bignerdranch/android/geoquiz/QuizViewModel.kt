@@ -19,6 +19,7 @@ class QuizViewModel : ViewModel() {
             true),
         Question(R.string.question_asia, true)
     )
+    var isCheater = false
     val currentQuestionAnswer: Boolean
         get() =
             questionBank[currentIndex].answer
